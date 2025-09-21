@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PrivyProvider } from '@privy-io/react-auth';
+import Providers from './context/Providers';
 import GameComponent from './components/GameComponent';
 import WalletComponent from './components/WalletComponent';
 import NetworkSelection from './components/NetworkSelection';
@@ -8,229 +8,9 @@ import PrivyDebugger from './components/PrivyDebugger';
 import './App.css';
 
 const App = () => {
-  // ВРЕМЕННО: Используем только рабочий App ID, пока не исправлена переменная в Vercel
-  // const appId = import.meta.env.VITE_PRIVY_APP_ID || 'cme84q0og02aalc0bh9blzwa9';
-  const appId = 'cme84q0og02aalc0bh9blzwa9'; // Hardcoded временно из-за неверной env переменной
-  console.log('Privy App ID:', appId);
-  
+
   const [gameState, setGameState] = useState('network-selection'); // 'network-selection' | 'wallet-connection' | 'game'
   const [selectedNetwork, setSelectedNetwork] = useState(null);
-
-  // Конфигурация сетей для ончейн системы
-  const megaethTestnet = {
-    id: 6342,
-    name: 'MegaETH Testnet',
-    network: 'megaeth-testnet',
-    nativeCurrency: {
-      name: 'Ether',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-    rpcUrls: {
-      default: {
-        http: ['https://carrot.megaeth.com/rpc'],
-        webSocket: ['wss://carrot.megaeth.com/ws'],
-      },
-    },
-    blockExplorers: {
-      default: {
-        name: 'MegaETH Explorer',
-        url: 'https://carrot.megaeth.com',
-      },
-    },
-  };
-
-  const foundryNetwork = {
-    id: 31337,
-    name: 'Foundry Local',
-    network: 'foundry',
-    nativeCurrency: {
-      name: 'Ether',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-    rpcUrls: {
-      default: {
-        http: ['http://127.0.0.1:8545'],
-      },
-    },
-  };
-
-  const somniaTestnet = {
-    id: 50311,
-    name: 'Somnia Testnet',
-    network: 'somnia-testnet',
-    nativeCurrency: {
-      name: 'Ether',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-    rpcUrls: {
-      default: {
-        http: ['https://testnet.somnia.network'],
-      },
-    },
-  };
-
-  const riseTestnet = {
-    id: 1313161556,
-    name: 'RISE Testnet',
-    network: 'rise-testnet',
-    nativeCurrency: {
-      name: 'Ether',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-    rpcUrls: {
-      default: {
-        http: ['https://testnet-rpc.rise.com'],
-      },
-    },
-  };
-
-  // Privy configuration optimized for seamless gaming experience
-  const privyConfig = {
-    // appId теперь передается отдельно в PrivyProvider
-    config: {
-      // Appearance
-      appearance: {
-        theme: 'dark',
-        accentColor: '#1391ff',
-        logo: 'https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=100&h=100&fit=crop&crop=center',
-        walletChainType: 'ethereum-and-solana',
-        showWalletLoginFirst: false,
-        showWalletUiOnNotConnected: false, // Отключаем UI кошелька
-        showWalletUi: false, // Полностью отключаем UI кошелька
-      },
-      
-      // РЕВОЛЮЦИОННАЯ конфигурация Embedded Wallets для нулевого трения
-      embeddedWallets: {
-        createOnLogin: 'all-users', // Автоматическое создание для всех пользователей
-        requireUserPasswordOnCreate: false, // Убираем трение пароля
-        noPromptOnSignature: true, // Отключаем промпты для подписи
-        showWalletUiOnNotConnected: false, // Отключаем UI для не подключенных кошельков
-        showWalletUi: false, // Полностью отключаем UI кошелька
-        prependWithWalletUi: false, // Не показываем UI кошелька в начале
-      },
-      
-      // Login methods optimized for gaming
-      loginMethods: ['email', 'wallet', 'google', 'discord', 'twitter'],
-      
-      // Дополнительные настройки для embedded wallets
-      externalWallets: {
-        coinbaseWallet: {
-          connectionOptions: 'all',
-        },
-      },
-      
-      // МГНОВЕННЫЕ настройки сети
-      defaultChain: megaethTestnet, // MegaETH как приоритетная сеть
-      supportedChains: [
-        megaethTestnet,
-        foundryNetwork,
-        somniaTestnet,
-        riseTestnet,
-        {
-          id: 84532, // Base Sepolia
-          name: 'Base Sepolia',
-          network: 'base-sepolia',
-          nativeCurrency: {
-            name: 'Ether',
-            symbol: 'ETH',
-            decimals: 18,
-          },
-          rpcUrls: {
-            default: {
-              http: ['https://sepolia.base.org'],
-            },
-          },
-          blockExplorers: {
-            default: {
-              name: 'Base Sepolia Explorer',
-              url: 'https://sepolia.basescan.org',
-            },
-          },
-        },
-        {
-          id: 10143, // Monad Testnet
-          name: 'Monad Testnet',
-          network: 'monad-testnet',
-          nativeCurrency: {
-            name: 'Monad',
-            symbol: 'MON',
-            decimals: 18,
-          },
-          rpcUrls: {
-            default: {
-              http: ['https://testnet-rpc.monad.xyz'],
-            },
-          },
-          blockExplorers: {
-            default: {
-              name: 'Monad Explorer',
-              url: 'https://testnet.monadexplorer.com',
-            },
-          },
-        },
-        {
-          id: 1, // Ethereum Mainnet
-          name: 'Ethereum',
-          network: 'homestead',
-          nativeCurrency: {
-            name: 'Ether',
-            symbol: 'ETH',
-            decimals: 18,
-          },
-          rpcUrls: {
-            default: {
-              http: ['https://eth-mainnet.g.alchemy.com/v2/your-api-key'],
-            },
-          },
-          blockExplorers: {
-            default: {
-              name: 'Etherscan',
-              url: 'https://etherscan.io',
-            },
-          },
-        },
-        {
-          id: 11155111, // Sepolia Testnet
-          name: 'Sepolia',
-          network: 'sepolia',
-          nativeCurrency: {
-            name: 'Sepolia Ether',
-            symbol: 'ETH',
-            decimals: 18,
-          },
-          rpcUrls: {
-            default: {
-              http: ['https://sepolia.infura.io/v3/your-api-key'],
-            },
-          },
-          blockExplorers: {
-            default: {
-              name: 'Etherscan',
-              url: 'https://sepolia.etherscan.io',
-            },
-          },
-        },
-      ],
-      
-      // Оптимизация для Real-Time Gaming
-      walletConnectCloudProjectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "default",
-      
-      // УЛУЧШЕННЫЕ настройки для минимального трения
-      legal: {
-        termsAndConditionsUrl: '/terms',
-        privacyPolicyUrl: '/privacy',
-      },
-      
-      // Автоматические разрешения для игры 
-      mfa: {
-        noPromptOnMfaRequired: false
-      }
-    }
-  };
 
   const handleNetworkSelect = (network) => {
     setSelectedNetwork(network);
@@ -269,10 +49,7 @@ const App = () => {
   };
 
   return (
-    <PrivyProvider
-      appId={appId}
-      config={privyConfig.config}
-    >
+    <Providers>
       <div className="app">
         {gameState === 'network-selection' ? (
           <NetworkSelection 
@@ -331,8 +108,9 @@ const App = () => {
         )}
       </div>
       {/* Временный компонент для отладки Privy */}
+      {/* Temporary component for Privy debugging */}
       <PrivyDebugger />
-    </PrivyProvider>
+    </Providers>
   );
 };
 

@@ -3,6 +3,7 @@ import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { createWalletClient, http, custom, parseGwei, createPublicClient } from 'viem';
 
 // Конфигурация сетей
+// Network configuration
 const NETWORK_CONFIGS = {
   6342: { // MegaETH Testnet
     name: 'MegaETH Testnet',
@@ -10,16 +11,20 @@ const NETWORK_CONFIGS = {
     fallbackRpcUrls: [
       'https://carrot.megaeth.com/rpc',
       // Добавьте дополнительные RPC endpoints если доступны
+      // Add additional RPC endpoints if available
     ],
     wsUrl: 'wss://carrot.megaeth.com/ws',
     contractAddress: '0xb34cac1135c27ec810e7e6880325085783c1a7e0', // Updater contract
     faucetAddress: '0x76b71a17d82232fd29aca475d14ed596c67c4b85',
     chainId: 6342,
     sendMethod: 'realtime_sendRawTransaction', // Специальный метод для MegaETH
+    // Special method for MegaETH
     connectionTimeouts: {
       initial: 10000, // 10 seconds for initial connection
       retry: 3000,    // 3 seconds for retries (быстрые retry для gaming)
+      // fast retries for gaming
       request: 5000   // 5 seconds for individual requests (для real-time gaming)
+      // for real-time gaming
     },
     maxConnections: 3, // Limit concurrent connections
   },
@@ -61,6 +66,7 @@ const NETWORK_CONFIGS = {
     faucetAddress: '0x76b71a17d82232fd29aca475d14ed596c67c4b85',
     chainId: 1313161556,
     sendMethod: 'eth_sendRawTransactionSync', // Синхронный метод для RISE
+    // Synchronous method for RISE
     connectionTimeouts: {
       initial: 20000,
       retry: 10000,
@@ -71,6 +77,7 @@ const NETWORK_CONFIGS = {
 };
 
 // ABI для Updater контракта
+// ABI for Updater contract
 const UPDATER_ABI = [
   {
     "inputs": [],
@@ -121,24 +128,31 @@ const safeJsonParse = (data) => {
 export const useBlockchainUtils = () => {
   const { authenticated, user, login, logout, isReady } = usePrivy();
   const { wallets } = useWallets();
-  
+
   // Состояние
+  // State
   const [isInitializing, setIsInitializing] = useState(false);
   const [transactionPending, setTransactionPending] = useState(false);
   const [balance, setBalance] = useState('0');
   const [contractNumber, setContractNumber] = useState(0);
 
   // РЕВОЛЮЦИОННАЯ система кеширования с долгосрочным хранением
+  // REVOLUTIONARY caching system with long-term storage
   const clientCache = useRef({});
   const gasParams = useRef({});
   
   // НОВАЯ система глобального кеширования для минимизации RPC вызовов
+  // NEW global caching system to minimize RPC calls
   const GLOBAL_CACHE_KEY = 'megaBuddies_globalCache';
   const CACHE_EXPIRY = {
     gasParams: 5 * 60 * 1000, // 5 минут для газовых параметров
+    // 5 minutes for gas parameters
     chainParams: 30 * 1000,   // 30 секунд для параметров сети
+    // 30 seconds for network parameters
     rpcHealth: 2 * 60 * 1000, // 2 минуты для RPC health
+    // 2 minutes for RPC health
     clients: 10 * 60 * 1000,  // 10 минут для клиентов
+    // 10 minutes for clients
     nonce: 30 * 1000          // 30 секунд для nonce кэша
   };
 

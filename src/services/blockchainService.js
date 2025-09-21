@@ -1,5 +1,7 @@
 // PRE-SIGNED TRANSACTIONS ONLY - Используем только предварительно подписанные транзакции
+// We use only pre-signed transactions
 // Этот сервис больше не создает транзакции через ethers.js, а использует pre-signed пул
+// This service no longer creates transactions through ethers.js, but uses pre-signed pool
 
 // Contract addresses for different networks
 const CONTRACT_ADDRESSES = {
@@ -14,9 +16,11 @@ class BlockchainService {
     this.transactionQueue = [];
     this.isProcessingQueue = false;
     this.blockchainUtils = null; // Будет инициализирован через setBlockchainUtils
+    // Will be initialized through setBlockchainUtils
   }
 
   // Установка blockchain utils для использования pre-signed транзакций
+  // Setting up blockchain utils for using pre-signed transactions
   setBlockchainUtils(utils) {
     this.blockchainUtils = utils;
   }
@@ -47,6 +51,7 @@ class BlockchainService {
       console.log('Starting game with pre-signed transaction...');
       
       // Используем pre-signed транзакцию через blockchainUtils
+      // Use pre-signed transaction through blockchainUtils
       const result = await this.blockchainUtils.sendAndConfirmTransaction(this.chainId);
       
       console.log('Game started with pre-signed transaction:', result);
@@ -94,6 +99,7 @@ class BlockchainService {
       for (const item of currentBatch) {
         try {
           // Используем pre-signed транзакцию для движения
+          // Use pre-signed transaction for movement
           const result = await this.blockchainUtils.sendAndConfirmTransaction(this.chainId);
           console.log('Movement sent with pre-signed transaction:', result);
 
@@ -102,6 +108,7 @@ class BlockchainService {
             txHash: result.transactionHash || result.hash,
             blockchainTime: result.blockchainTime,
             pending: false // Pre-signed транзакции обрабатываются быстрее
+            // Pre-signed transactions are processed faster
           });
         } catch (error) {
           console.error('Pre-signed movement transaction failed:', error);
@@ -133,6 +140,7 @@ class BlockchainService {
       console.log('Ending game with pre-signed transaction...');
       
       // Используем pre-signed транзакцию для завершения игры
+      // Use pre-signed transaction for game completion
       const result = await this.blockchainUtils.sendAndConfirmTransaction(this.chainId);
       
       console.log('Game ended with pre-signed transaction:', result);
@@ -150,14 +158,18 @@ class BlockchainService {
 
   async getPlayerSession(address) {
     // В режиме pre-signed транзакций данные сессии недоступны через контракт
+    // In pre-signed transaction mode, session data is not available through contract
     // Возвращаем mock данные или получаем из локального состояния
+    // Return mock data or get from local state
     console.warn('Player session data not available in pre-signed only mode');
     return null;
   }
 
   async getPlayerHighScore(address) {
     // В режиме pre-signed транзакций хай-скор недоступен через контракт
+    // In pre-signed transaction mode, high score is not available through contract
     // Возвращаем mock данные или получаем из локального состояния
+    // Return mock data or get from local state
     console.warn('High score data not available in pre-signed only mode');
     return 0;
   }
@@ -175,6 +187,7 @@ class BlockchainService {
 
   isContractAvailable() {
     // В режиме pre-signed транзакций контракт всегда "доступен" через pre-signed пул
+    // In pre-signed transaction mode, contract is always "available" through pre-signed pool
     return this.blockchainUtils !== null;
   }
 

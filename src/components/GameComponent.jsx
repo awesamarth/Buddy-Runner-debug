@@ -18,6 +18,7 @@ const GameComponent = ({ selectedNetwork }) => {
   const { login } = useLogin();
   
   // Используем новый blockchain utils hook
+  // Using new blockchain utils hook
   const {
     isInitializing,
     transactionPending,
@@ -33,6 +34,7 @@ const GameComponent = ({ selectedNetwork }) => {
     ensureEmbeddedWallet,
     callFaucet,
     getPoolStatus // Для мониторинга pre-signed пула
+    // For monitoring pre-signed pool
   } = useBlockchainUtils();
 
   const [blockchainStatus, setBlockchainStatus] = useState({
@@ -43,6 +45,7 @@ const GameComponent = ({ selectedNetwork }) => {
     totalMovements: 0,
     onChainScore: 0,
     poolStatus: null // Статус pre-signed пула
+    // Pre-signed pool status
   });
 
   const [showToast, setShowToast] = useState(false);
