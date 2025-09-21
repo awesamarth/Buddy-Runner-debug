@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { usePrivy, useWallets, useLogin } from '@privy-io/react-auth';
-import { useBlockchainUtils } from '../hooks/useBlockchainUtils';
-import PrivyWalletStatus from './PrivyWalletStatus';
-import TransactionNotifications from './TransactionNotifications';
+import { useBlockchainUtils } from '../hooks/useBlockchainUtils.js';
+import { useBlockchainUtilsSimple } from '../hooks/useBlockchainUtilsSimple.js';
+import PrivyWalletStatus from './PrivyWalletStatus.jsx';
+import TransactionNotifications from './TransactionNotifications.jsx';
 import Player from '../game/Player.js';
 import Ground from '../game/Ground.js';
 import CarrotController from '../game/CarrotController.js';
@@ -16,26 +17,30 @@ const GameComponent = ({ selectedNetwork }) => {
   const { user, authenticated } = usePrivy();
   const { wallets } = useWallets();
   const { login } = useLogin();
+
+  // Feature flag to test simplified blockchain utils
+  const USE_SIMPLIFIED_HOOK = true; // Set to true to test new simplified version
   
-  // Используем новый blockchain utils hook
-  // Using new blockchain utils hook
+  // Conditionally use simplified or complex blockchain utils
+  const blockchainUtils = USE_SIMPLIFIED_HOOK ? useBlockchainUtilsSimple() : useBlockchainUtils();
+
+  // Extract the functions we need (with fallbacks for missing functions)
   const {
-    isInitializing,
-    transactionPending,
-    transactionPendingCount,
-    balance,
-    contractNumber,
+    isInitializing = false,
+    transactionPending = false,
+    transactionPendingCount = 0,
+    balance = '0',
+    contractNumber = 0,
     initData,
     sendUpdate,
     checkBalance,
-    getContractNumber,
+    getContractNumber = () => 0,
     isReady,
-    getEmbeddedWallet,
-    ensureEmbeddedWallet,
-    callFaucet,
-    getPoolStatus // Для мониторинга pre-signed пула
-    // For monitoring pre-signed pool
-  } = useBlockchainUtils();
+    getEmbeddedWallet = () => null,
+    ensureEmbeddedWallet = () => Promise.resolve(),
+    callFaucet = () => Promise.resolve(),
+    getPoolStatus = () => null
+  } = blockchainUtils;
 
   const [blockchainStatus, setBlockchainStatus] = useState({
     initialized: false,
@@ -90,7 +95,6 @@ const GameComponent = ({ selectedNetwork }) => {
   // Инициализация блокчейн данных
   const initializeBlockchain = async () => {
     if (!isReady || !selectedNetwork || selectedNetwork.isWeb2) {
-      console.log('Skipping blockchain initialization - Web2 mode or not ready');
       setBlockchainStatus(prev => ({ 
         ...prev, 
         initialized: false,
@@ -100,7 +104,6 @@ const GameComponent = ({ selectedNetwork }) => {
     }
 
     try {
-      console.log('Initializing blockchain for network:', selectedNetwork.name);
       
       await initData(selectedNetwork.id);
       
@@ -116,7 +119,6 @@ const GameComponent = ({ selectedNetwork }) => {
         onChainScore: currentNumber
       });
 
-      console.log('Blockchain initialization complete');
     } catch (error) {
       console.error('Failed to initialize blockchain:', error);
       setBlockchainStatus(prev => ({ 
@@ -133,7 +135,6 @@ const GameComponent = ({ selectedNetwork }) => {
     
     // Проверяем, поддерживает ли сеть ончейн функциональность
     if (!selectedNetwork || selectedNetwork.isWeb2 || !blockchainInitialized) {
-      console.log('Skipping on-chain movement - Web2 mode or not initialized');
       return;
     }
 
@@ -142,28 +143,24 @@ const GameComponent = ({ selectedNetwork }) => {
     if (selectedNetwork?.chainId === 6342) {
       // Для MegaETH разрешаем до 8 одновременных транзакций
       if (pendingTransactionCount.current > 8) {
-        console.log('🚫 Maximum MegaETH transaction throughput reached:', pendingTransactionCount.current);
         return;
       }
       // Дополнительная проверка: если транзакция висит больше 10 секунд, сбрасываем счетчик
       const now = Date.now();
       if (lastTransactionTime.current && (now - lastTransactionTime.current) > 10000) {
-        console.log('🔄 Resetting pending count due to timeout, was:', pendingTransactionCount.current);
         pendingTransactionCount.current = 0;
       }
     } else {
       // Для других сетей более строгая проверка
       if (transactionPendingRef.current) {
-        console.log('🚫 Transaction already pending, blocking jump');
-        return;
+          return;
       }
     }
 
     // Дополнительная проверка на минимальный интервал между транзакциями для предотвращения spam
     const now = Date.now();
     if (lastTransactionTime.current && (now - lastTransactionTime.current) < 100) {
-      console.log('🚫 Transaction rate limit: minimum 100ms between transactions');
-      return;
+        return;
     }
     lastTransactionTime.current = now;
 
@@ -178,7 +175,6 @@ const GameComponent = ({ selectedNetwork }) => {
       // 🎮 НОВАЯ Real-Time Gaming архитектура с измерением производительности
       const reactionTime = performance.now(); // Время реакции игрока
       
-      console.log('⚡ Sending instant on-chain jump transaction...');
       
       // Отправляем транзакцию с измерением производительности
       const txResult = await sendUpdate(selectedNetwork.id);
@@ -198,22 +194,8 @@ const GameComponent = ({ selectedNetwork }) => {
         performanceMetrics: txResult.performanceMetrics
       };
       
-      console.log('🎮 Real-Time Gaming Result:', gameResult);
       
-      // Отображаем производительность в консоли для разработки
-      if (process.env.NODE_ENV === 'development') {
-        console.table({
-          'Reaction Time (ms)': gameResult.reactionTime,
-          'Blockchain Time (ms)': gameResult.blockchainTime,
-          'Total Time (ms)': gameResult.totalTime,
-          'Network': gameResult.network,
-          'Is Instant': gameResult.isInstant ? '✅' : '❌',
-          'Success Rate (%)': gameResult.performanceMetrics?.successRate?.toFixed(1) || 'N/A',
-          'Avg Blockchain Time (ms)': gameResult.performanceMetrics?.averageBlockchainTime || 'N/A'
-        });
-      }
       
-      console.log(`🎯 Jump completed: ${gameResult.blockchainTime}ms blockchain time, ${gameResult.isInstant ? 'INSTANT' : 'PENDING'} confirmation`);
       
       // Обновляем статистику
       setBlockchainStatus(prev => ({
@@ -230,7 +212,6 @@ const GameComponent = ({ selectedNetwork }) => {
         try {
           await getContractNumber(selectedNetwork.id);
         } catch (error) {
-          console.error('Error updating contract number:', error);
         }
       }, 1000);
 
@@ -252,12 +233,10 @@ const GameComponent = ({ selectedNetwork }) => {
         errorType = 'NONCE_ERROR';
         
         // Специальная обработка ошибок nonce - даем системе время на восстановление
-        console.log('🔄 Nonce error detected, applying recovery cooldown and resetting pending count');
         lastTransactionTime.current = Date.now() + 1000; // Блокируем транзакции на 1 секунду
         
         // Агрессивно сбрасываем счетчик pending транзакций при ошибке nonce
         if (pendingTransactionCount.current > 0) {
-          console.log(`🔄 Resetting pending count from ${pendingTransactionCount.current} to 0 due to nonce error`);
           pendingTransactionCount.current = 0;
         }
       } else if (error.message.includes('timeout')) {
@@ -275,7 +254,6 @@ const GameComponent = ({ selectedNetwork }) => {
       }
       
       // Логируем ошибку с типом для аналитики
-      console.error(`🚨 Blockchain Error [${errorType}]:`, errorMessage);
       
       // Обновляем статистику ошибок (можно добавить в blockchainStatus)
       setBlockchainStatus(prev => ({
@@ -313,7 +291,6 @@ const GameComponent = ({ selectedNetwork }) => {
       // Убеждаемся, что у нас есть embedded wallet
       let embeddedWallet = getEmbeddedWallet();
       if (!embeddedWallet) {
-        console.log('No embedded wallet found, attempting to create one...');
         embeddedWallet = await ensureEmbeddedWallet();
         if (!embeddedWallet) {
           alert('Please connect your wallet first');
@@ -321,14 +298,11 @@ const GameComponent = ({ selectedNetwork }) => {
         }
       }
 
-      console.log('Manual faucet request for:', embeddedWallet.address);
       const result = await callFaucet(embeddedWallet.address, selectedNetwork.id);
 
-      console.log('Faucet result:', result);
 
       // Wait for transaction to be confirmed
       if (result.txHash || result.transactionHash) {
-        console.log('Faucet transaction successful, refreshing balance...');
 
         // Wait a moment and then refresh balance
         setTimeout(async () => {
@@ -389,7 +363,6 @@ const GameComponent = ({ selectedNetwork }) => {
   useEffect(() => {
     // Skip blockchain initialization for web2 mode
     if (selectedNetwork && selectedNetwork.isWeb2) {
-      console.log('Web2 mode selected, skipping blockchain initialization');
       setBlockchainStatus({
         initialized: false,
         networkName: selectedNetwork.name,
@@ -403,7 +376,6 @@ const GameComponent = ({ selectedNetwork }) => {
 
     // Only initialize if we have proper authentication and embedded wallet
     if (selectedNetwork && isReady && authenticated && wallets.length > 0) {
-      console.log('Initializing blockchain for:', selectedNetwork.name);
 
       initializeBlockchain();
     } else {
@@ -421,7 +393,7 @@ const GameComponent = ({ selectedNetwork }) => {
         poolStatus: poolStatus
       }));
     }
-  }, [transactionPending, selectedNetwork, getPoolStatus]);
+  }, [transactionPending, selectedNetwork]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -476,7 +448,7 @@ const GameComponent = ({ selectedNetwork }) => {
       const carrotImages = CARROT_CONFIG.map(carrot => {
         const image = new Image();
         image.src = carrot.imageSrc;
-        image.onerror = () => console.error(`Failed to load ${carrot.imageSrc}`);
+        image.onerror = () => {};
         return {
           image: image,
           width: carrot.width * game.scaleRatio,

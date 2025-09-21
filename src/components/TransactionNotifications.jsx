@@ -10,7 +10,6 @@ const TransactionNotifications = ({
   authenticated 
 }) => {
   const [notifications, setNotifications] = useState([]);
-  const [nextId, setNextId] = useState(1);
   const [lastProcessedTransactionTime, setLastProcessedTransactionTime] = useState(0);
   const [lastPendingCount, setLastPendingCount] = useState(0);
 
@@ -27,7 +26,7 @@ const TransactionNotifications = ({
         
         if (currentTransactionTime > lastProcessedTransactionTime && currentTransactionTime > 0) {
           const notification = {
-            id: nextId,
+            id: Date.now() + Math.random(),
             type: 'transaction',
             title: 'Jump Completed',
             message: `Jump completed in ${currentTransactionTime}ms on ${selectedNetwork.name}`,
@@ -37,12 +36,11 @@ const TransactionNotifications = ({
           };
           
           setNotifications(prev => [...prev, notification]);
-          setNextId(prev => prev + 1);
           setLastProcessedTransactionTime(currentTransactionTime);
         }
       }
     }
-  }, [blockchainStatus?.totalMovements, blockchainStatus?.lastTransactionTime, authenticated, selectedNetwork, nextId, lastProcessedTransactionTime]);
+  }, [blockchainStatus?.totalMovements, blockchainStatus?.lastTransactionTime, authenticated, selectedNetwork, lastProcessedTransactionTime]);
 
   // Добавляем уведомление о pending транзакции (отслеживаем увеличение transactionPendingCount)
   useEffect(() => {
@@ -50,23 +48,22 @@ const TransactionNotifications = ({
       // Если количество pending транзакций увеличилось, создаем уведомление
       if (transactionPendingCount > lastPendingCount) {
         const notification = {
-          id: nextId,
+          id: Date.now() + Math.random(),
           type: 'transaction',
           title: 'Transaction Pending',
           message: `Processing jump on ${selectedNetwork.name}`,
           status: 'pending',
           timestamp: Date.now()
         };
-        
+
         setNotifications(prev => [...prev, notification]);
-        setNextId(prev => prev + 1);
         setLastPendingCount(transactionPendingCount);
       } else if (transactionPendingCount < lastPendingCount) {
         // Если количество pending уменьшилось, обновляем счетчик
         setLastPendingCount(transactionPendingCount);
       }
     }
-  }, [transactionPendingCount, authenticated, selectedNetwork, nextId, lastPendingCount]);
+  }, [transactionPendingCount, authenticated, selectedNetwork, lastPendingCount]);
 
   // Обновляем pending транзакции до completed (только для не-MegaETH сетей)
   useEffect(() => {
@@ -97,19 +94,18 @@ const TransactionNotifications = ({
       
       if (!hasRecentError) {
         const notification = {
-          id: nextId,
+          id: Date.now() + Math.random(),
           type: 'error',
           title: 'Transaction Error',
           message: `${blockchainStatus.lastError.type}: ${blockchainStatus.lastError.message?.slice(0, 50)}...`,
           status: 'error',
           timestamp: Date.now()
         };
-        
+
         setNotifications(prev => [...prev, notification]);
-        setNextId(prev => prev + 1);
       }
     }
-  }, [blockchainStatus?.lastError?.timestamp, authenticated, selectedNetwork, notifications, nextId]); // Используем timestamp вместо всего объекта
+  }, [blockchainStatus?.lastError?.timestamp, authenticated, selectedNetwork]); // Используем timestamp вместо всего объекта
 
   // Добавляем уведомление о высокой производительности
   useEffect(() => {
@@ -121,19 +117,18 @@ const TransactionNotifications = ({
       
       if (!hasPerformanceNotif) {
         const notification = {
-          id: nextId,
+          id: Date.now() + Math.random(),
           type: 'performance',
           title: 'Excellent Performance!',
           message: `Average speed: ${Math.round(blockchainStatus.averageTransactionTime)}ms - Gaming Mode Active! 🚀`,
           status: 'success',
           timestamp: Date.now()
         };
-        
+
         setNotifications(prev => [...prev, notification]);
-        setNextId(prev => prev + 1);
       }
     }
-  }, [blockchainStatus?.averageTransactionTime, authenticated, selectedNetwork, notifications, nextId]);
+  }, [blockchainStatus?.averageTransactionTime, authenticated, selectedNetwork]);
 
   // Добавляем уведомление о низком балансе
   useEffect(() => {
@@ -142,19 +137,18 @@ const TransactionNotifications = ({
       
       if (!hasLowBalanceNotif) {
         const notification = {
-          id: nextId,
+          id: Date.now() + Math.random(),
           type: 'low-balance',
           title: 'Low Balance',
           message: `Balance: ${balance} ETH - Get test tokens`,
           status: 'warning',
           timestamp: Date.now()
         };
-        
+
         setNotifications(prev => [...prev, notification]);
-        setNextId(prev => prev + 1);
       }
     }
-  }, [balance, authenticated, selectedNetwork, notifications, nextId]);
+  }, [balance, authenticated, selectedNetwork]);
 
   // Автоматическое удаление старых уведомлений
   useEffect(() => {
