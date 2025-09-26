@@ -8,13 +8,7 @@ const NETWORK_CONFIGS = {
   6342: { // MegaETH Testnet
     name: 'MegaETH Testnet',
     rpcUrl: 'https://carrot.megaeth.com/rpc',
-    fallbackRpcUrls: [
-      'https://carrot.megaeth.com/rpc',
-      // Добавьте дополнительные RPC endpoints если доступны
-      // Add additional RPC endpoints if available
-    ],
-    wsUrl: 'wss://carrot.megaeth.com/ws',
-    contractAddress: '0xb34cac1135c27ec810e7e6880325085783c1a7e0', // Updater contract
+    contractAddress: '0xb34cac1135c27ec810e7e6880325085783c1a7e0', 
     faucetAddress: '0x76b71a17d82232fd29aca475d14ed596c67c4b85',
     chainId: 6342,
     sendMethod: 'realtime_sendRawTransaction', // Специальный метод для MegaETH
@@ -157,13 +151,16 @@ export const useBlockchainUtils = () => {
   };
 
   // Сохранение глобального кеша в localStorage с обработкой BigInt
+  // Saving global cache to localStorage with BigInt handling
   const saveGlobalCache = () => {
     try {
       // Функция для безопасной сериализации BigInt
+      // Function for safe BigInt serialization
       const serializeBigInt = (obj) => {
         return JSON.parse(JSON.stringify(obj, (key, value) => {
           if (typeof value === 'bigint') {
             return value.toString() + 'n'; // Добавляем маркер 'n' для BigInt
+            // Add 'n' marker for BigInt
           }
           return value;
         }));
@@ -693,72 +690,6 @@ export const useBlockchainUtils = () => {
     return null;
   };
 
-  // Функция для принудительного создания embedded wallet
-  const ensureEmbeddedWallet = async () => {
-    if (!authenticated || !user) {
-      console.log('🔍 ensureEmbeddedWallet: Not authenticated or no user');
-      return null;
-    }
-
-    // Проверяем, есть ли уже embedded wallet
-    const existingEmbeddedWallet = getEmbeddedWallet();
-    if (existingEmbeddedWallet && (
-      existingEmbeddedWallet.walletClientType === 'privy' || 
-      existingEmbeddedWallet.connectorType === 'embedded' ||
-      existingEmbeddedWallet.type === 'embedded' ||
-      existingEmbeddedWallet.walletClientType === 'embedded' ||
-      existingEmbeddedWallet.walletIndex === 0
-    )) {
-      console.log('✅ Embedded wallet already exists:', existingEmbeddedWallet.address);
-      return existingEmbeddedWallet;
-    }
-
-    console.log('🔄 Attempting to create embedded wallet...');
-    
-    try {
-      // Wait a bit for any pending wallet creation to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Check again after waiting
-      const retryEmbeddedWallet = getEmbeddedWallet();
-      if (retryEmbeddedWallet) {
-        console.log('✅ Found embedded wallet after waiting:', retryEmbeddedWallet.address);
-        return retryEmbeddedWallet;
-      }
-      
-      // Пытаемся создать embedded wallet через Privy
-      if (window.privy && window.privy.createWallet) {
-        console.log('🔄 Attempting to create wallet via Privy...');
-        const newWallet = await window.privy.createWallet();
-        console.log('✅ Created new embedded wallet via Privy:', newWallet);
-        
-        // Wait a bit more for the wallet to be properly registered
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Check if the wallet is now available in the wallets list
-        const finalCheck = getEmbeddedWallet();
-        if (finalCheck) {
-          console.log('✅ Embedded wallet successfully registered:', finalCheck.address);
-          return finalCheck;
-        } else {
-          console.log('⚠️ Wallet created but not found in wallets list');
-          return newWallet;
-        }
-      }
-      
-      console.log('⚠️ Privy createWallet not available');
-      return null;
-    } catch (error) {
-      console.error('❌ Failed to create embedded wallet:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        privyAvailable: !!window.privy,
-        createWalletAvailable: !!(window.privy && window.privy.createWallet)
-      });
-      return null;
-    }
-  };
 
   // ЗНАЧИТЕЛЬНО УЛУЧШЕННОЕ создание клиентов с системой fallback endpoints
   const createClients = async (chainId) => {

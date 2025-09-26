@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { usePrivy, useWallets, useLogin } from '@privy-io/react-auth';
-import { useBlockchainUtils } from '../hooks/useBlockchainUtils.js';
+// import { useBlockchainUtils } from '../hooks/useBlockchainUtils.js';
 import { useBlockchainUtilsSimple } from '../hooks/useBlockchainUtilsSimple.js';
 import PrivyWalletStatus from './PrivyWalletStatus.jsx';
 import TransactionNotifications from './TransactionNotifications.jsx';
@@ -22,7 +22,7 @@ const GameComponent = ({ selectedNetwork }) => {
   const USE_SIMPLIFIED_HOOK = true; // Set to true to test new simplified version
   
   // Conditionally use simplified or complex blockchain utils
-  const blockchainUtils = USE_SIMPLIFIED_HOOK ? useBlockchainUtilsSimple() : useBlockchainUtils();
+  const blockchainUtils = useBlockchainUtilsSimple()
 
   // Extract the functions we need (with fallbacks for missing functions)
   const {
@@ -94,6 +94,7 @@ const GameComponent = ({ selectedNetwork }) => {
 
   // Инициализация блокчейн данных
   const initializeBlockchain = async () => {
+    console.log("embedded wallet detected: ", wallets[0] )
     if (!isReady || !selectedNetwork || selectedNetwork.isWeb2) {
       setBlockchainStatus(prev => ({ 
         ...prev, 
@@ -577,21 +578,13 @@ const GameComponent = ({ selectedNetwork }) => {
           canvas.height / 2 + fontSize + statusFontSize + 25
         );
         
-        if (blockchainStatus.initialized) {
           ctx.fillStyle = "#28a745";
           ctx.fillText(
             "> BLOCKCHAIN CONNECTION: ACTIVE",
             canvas.width / 2,
             canvas.height / 2 + fontSize + statusFontSize * 2 + 30
           );
-        } else {
-          ctx.fillStyle = "#ffc107";
-          ctx.fillText(
-            "> BLOCKCHAIN CONNECTION: SIMULATED MODE",
-            canvas.width / 2,
-            canvas.height / 2 + fontSize + statusFontSize * 2 + 30
-          );
-        }
+        
       } else {
         ctx.fillStyle = "#ef5435";
         ctx.fillText(
@@ -776,13 +769,13 @@ const GameComponent = ({ selectedNetwork }) => {
       
       <canvas ref={canvasRef} />
       
-      {/* Privy Wallet Status Monitor */}
+      {/* Privy Wallet Status Monitor
       {authenticated && selectedNetwork && !selectedNetwork.isWeb2 && (
         <PrivyWalletStatus 
           selectedNetwork={selectedNetwork}
           className="wallet-status-overlay"
         />
-      )}
+      )} */}
       
       {/* Transaction Status Toast */}
       {showToast && (

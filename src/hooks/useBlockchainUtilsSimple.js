@@ -74,6 +74,7 @@ export function useBlockchainUtilsSimple() {
     if (!config) throw new Error(`Unsupported chain: ${chainId}`);
 
     const provider = await embeddedWallet.getEthereumProvider();
+    
 
     const chain = {
       id: config.chainId,
@@ -108,7 +109,7 @@ export function useBlockchainUtilsSimple() {
     const balance = await client.getBalance({
       address: embeddedWallet.address
     });
-
+    
     return balance;
   };
 
@@ -134,6 +135,8 @@ export function useBlockchainUtilsSimple() {
     const currentNonce = await client.getTransactionCount({
       address: embeddedWallet.address
     });
+
+    console.log("here's the current nonce: ", currentNonce)
 
     // Get gas parameters (simplified)
     if (!gasParams[chainId]) {

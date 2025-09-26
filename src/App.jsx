@@ -24,7 +24,7 @@ const App = () => {
       console.log('Setting game state to wallet-connection');
       setGameState('wallet-connection');
     } else {
-      console.log('Setting game state to game');
+      console.log('Setting game state to game (game started)');
       setGameState('game');
     }
   };
