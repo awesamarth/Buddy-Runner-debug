@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Providers from './context/Providers';
 import GameComponent from './components/GameComponent';
-import WalletComponent from './components/WalletComponent';
 import NetworkSelection from './components/NetworkSelection';
 import WalletConnection from './components/WalletConnection';
 import PrivyDebugger from './components/PrivyDebugger';
@@ -78,14 +77,7 @@ const App = () => {
                 ← Back to Network Selection
               </button>
             </div>
-            {/* Only show WalletComponent for blockchain networks, not for web2 */}
-            {selectedNetwork && !selectedNetwork.isWeb2 && (
-              <WalletComponent 
-                selectedNetwork={selectedNetwork} 
-                onDisconnect={handleDisconnect}
-                disableNetworkControls={true}
-              />
-            )}
+
             <div className="game-layout">
               <div className="game-header">
                 <div className="header-center">

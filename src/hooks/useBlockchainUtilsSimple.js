@@ -51,11 +51,11 @@ let clientCache = {};
 // Simple gas parameters cache
 let gasParams = {};
 
-// Simple ABI for Updater contract
-const UPDATER_ABI = [
+// Simple ABI for BuddyGame contract
+const BUDDY_GAME_ABI = [
   {
     "type": "function",
-    "name": "update",
+    "name": "makeMovement",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -173,8 +173,8 @@ export function useBlockchainUtilsSimple() {
         const txRequest = {
           to: config.contractAddress,
           data: encodeFunctionData({
-            abi: UPDATER_ABI,
-            functionName: 'update',
+            abi: BUDDY_GAME_ABI,
+            functionName: 'makeMovement',
             args: []
           }),
           nonce: startNonce + i,

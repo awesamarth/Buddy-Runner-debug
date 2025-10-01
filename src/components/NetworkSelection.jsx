@@ -92,13 +92,6 @@ const NetworkSelection = ({ onNetworkSelect, onStartGame }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Debug информация для разработки
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Window dimensions changed:', windowDimensions);
-      console.log('Dynamic styles:', getDynamicStyles());
-    }
-  }, [windowDimensions]);
 
   // Динамические стили на основе размеров окна
   const getDynamicStyles = () => {
