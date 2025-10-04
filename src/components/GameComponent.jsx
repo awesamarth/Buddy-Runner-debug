@@ -113,16 +113,6 @@ const GameComponent = ({ selectedNetwork }) => {
         }, 2000);
       }
 
-      if (balanceWei > 0n && wallets[0]?.address) {
-        console.log(`test call faucet`);
-        await callFaucet(wallets[0].address, selectedNetwork.id);
-        // Refresh balance after faucet
-        setTimeout(async () => {
-          const newBalanceWei = await checkBalance(selectedNetwork.id);
-          const newBalanceEth = (Number(newBalanceWei) / 1e18).toFixed(6);
-          setBalance(newBalanceEth);
-        }, 2000);
-      }
 
       setBlockchainStatus({
         initialized: true,
@@ -675,7 +665,7 @@ const GameComponent = ({ selectedNetwork }) => {
       document.removeEventListener("keyup", initialKeyHandler);
       document.removeEventListener("touchstart", initialKeyHandler);
     };
-  }, [selectedNetwork]);
+  }, [selectedNetwork, authenticated, isReady]);
 
   return (
     <div className="game-container">
