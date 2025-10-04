@@ -159,6 +159,7 @@
 }
 
 /* Цветовые классы для статусов */
+/* Color classes for statuses */
 .text-green-400 {
   color: #4ade80;
 }
@@ -188,6 +189,7 @@
 }
 
 /* Адаптивность */
+/* Responsiveness */
 @media (max-width: 768px) {
   .privy-wallet-status {
     font-size: 11px;
@@ -209,6 +211,7 @@
 }
 
 /* Пульсирующая анимация для активного статуса */
+/* Pulsing animation for active status */
 .status-icon.text-green-400 {
   animation: pulse 2s infinite;
 }
@@ -223,6 +226,7 @@
 }
 
 /* Специальные стили для разных состояний пула */
+/* Special styles for different pool states */
 .pool-status.critical .status-icon {
   animation: blink 1s infinite;
 }

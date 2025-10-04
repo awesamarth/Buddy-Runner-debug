@@ -26,7 +26,6 @@ const WalletComponent = ({ selectedNetwork, onDisconnect, disableNetworkControls
           const isEmbeddedWallet = wallet.walletClientType === 'privy';
           if (isEmbeddedWallet) {
             console.log(`Auto-switching to ${selectedNetwork.name}...`);
-            console.log('⚡ INSTANT GAMING MODE ENABLED - игра готова!');
             return;
           }
           

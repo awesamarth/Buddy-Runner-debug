@@ -1,4 +1,5 @@
 /* Transaction Notifications - правый нижний угол */
+/* Transaction Notifications - bottom right corner */
 .transaction-notifications {
   position: fixed;
   bottom: 20px;
@@ -37,6 +38,7 @@
 }
 
 /* Анимация появления */
+/* Appearance animation */
 @keyframes slideIn {
   from {
     transform: translateX(100%);
@@ -49,6 +51,7 @@
 }
 
 /* Анимация исчезновения */
+/* Disappearance animation */
 .notification.fade-out {
   animation: slideOut 0.3s ease-out forwards;
 }
@@ -65,6 +68,7 @@
 }
 
 /* Типы уведомлений */
+/* Notification types */
 .notification.pending {
   border-left: 4px solid #ffa500;
   box-shadow: 
@@ -101,6 +105,7 @@
 }
 
 /* Заголовок уведомления */
+/* Notification header */
 .notification-header {
   display: flex;
   align-items: center;
@@ -146,6 +151,7 @@
 }
 
 /* Сообщение уведомления */
+/* Notification message */
 .notification-message {
   color: rgba(255, 255, 255, 0.8);
   line-height: 1.4;
@@ -153,6 +159,7 @@
 }
 
 /* Прогресс бар для pending транзакций */
+/* Progress bar for pending transactions */
 .notification-progress {
   margin-top: 8px;
 }
@@ -184,6 +191,7 @@
 }
 
 /* Адаптивность для мобильных устройств */
+/* Responsiveness for mobile devices */
 @media (max-width: 768px) {
   .transaction-notifications {
     bottom: 10px;
@@ -203,6 +211,7 @@
 }
 
 /* Специальные эффекты для gaming стиля */
+/* Special effects for gaming style */
 .notification.pending .notification-icon {
   animation: spin 2s linear infinite;
 }
@@ -229,6 +238,7 @@
 }
 
 /* Пульсация для warning */
+/* Pulsation for warning */
 .notification.warning {
   animation: warningPulse 2s ease-in-out infinite;
 }
@@ -247,6 +257,7 @@
 }
 
 /* Тряска для error */
+/* Shake for error */
 .notification.error {
   animation: errorShake 0.5s ease-in-out;
 }
