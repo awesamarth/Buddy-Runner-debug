@@ -5,7 +5,7 @@ export const callFaucet = async (address, chainId) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ address, chain: chainId }),
+      body: JSON.stringify({ address, chainId }),
     });
 
     const data = await response.json();
