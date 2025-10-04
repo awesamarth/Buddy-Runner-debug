@@ -113,6 +113,7 @@ const GameComponent = ({ selectedNetwork }) => {
         }, 2000);
       }
 
+
       setBlockchainStatus({
         initialized: true,
         networkName: selectedNetwork.name,
@@ -664,12 +665,22 @@ const GameComponent = ({ selectedNetwork }) => {
       document.removeEventListener("keyup", initialKeyHandler);
       document.removeEventListener("touchstart", initialKeyHandler);
     };
-  }, [selectedNetwork]);
+  }, [selectedNetwork, authenticated, isReady]);
 
   return (
     <div className="game-container">
 
-      
+      {/* Blockchain Initialization Loading Overlay */}
+      {isInitializing && selectedNetwork && !selectedNetwork.isWeb2 && (
+        <div className="blockchain-loading-overlay">
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <p>Initializing blockchain...</p>
+            <p className="loading-subtext">Setting up your wallet and preparing transactions</p>
+          </div>
+        </div>
+      )}
+
       <canvas ref={canvasRef} />
       
       {/* Privy Wallet Status Monitor
