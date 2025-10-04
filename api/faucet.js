@@ -1,32 +1,10 @@
-import { ethers } from 'ethers';
 
-// Конфигурация сетей и контрактов
-const NETWORKS = {
-  6342: { // MegaETH Testnet
-    rpcUrl: process.env.MEGAETH_RPC_URL || 'https://carrot.megaeth.com/rpc',
-    chainId: 6342
-  },
-  31337: { // Foundry Local
-    rpcUrl: process.env.FOUNDRY_RPC_URL || 'http://127.0.0.1:8545',
-    chainId: 31337
-  },
-  84532: { // Base Sepolia
-    rpcUrl: 'https://sepolia.base.org',
-    chainId: 84532
-  },
-  10143: { // Monad Testnet
-    rpcUrl: 'https://testnet-rpc.monad.xyz',
-    chainId: 10143
-  },
-  50311: { // Somnia Testnet
-    rpcUrl: 'https://testnet.somnia.network',
-    chainId: 50311
-  },
-  1313161556: { // RISE Testnet
-    rpcUrl: 'https://testnet-rpc.rise.com',
-    chainId: 1313161556
-  }
-};
+import { createPublicClient, createWalletClient, formatEther, http, isAddress, parseEther, publicActions } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { baseSepolia, megaethTestnet, riseTestnet, foundry, somniaTestnet, monadTestnet } from "viem/chains";
+//supoorted networks are megaeth, foundry, base sepolia, monad testnet, somnia testnet, rise testnet
+
+
 
 export default async function handler(req, res) {
 
@@ -57,18 +35,25 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Address and chainId are required' });
     }
 
-    if (!ethers.isAddress(address)) {
+    if (!isAddress(address)) {
       console.log('[FAUCET] Validation failed: Invalid address format');
       return res.status(400).json({ error: 'Invalid address format' });
     }
+    const CHAIN_MAP = {
+      [megaethTestnet.id]: megaethTestnet,
+      [monadTestnet.id]: monadTestnet,
+      [riseTestnet.id]: riseTestnet,
+      [baseSepolia.id]: baseSepolia,
+      [foundry.id]: foundry,
+      [somniaTestnet.id]: somniaTestnet,
+    };
 
-    const network = NETWORKS[chainId];
+    const network = CHAIN_MAP[chainId];
     if (!network) {
       console.log('[FAUCET] Validation failed: Unsupported network', chainId);
       return res.status(400).json({ error: 'Unsupported network' });
     }
 
-    console.log('[FAUCET] Validation passed for', network.rpcUrl);
 
     // Получаем приватный ключ владельца из переменных окружения
     const ownerPrivateKey = process.env.FAUCET_OWNER_PRIVATE_KEY;
@@ -77,42 +62,65 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Faucet owner private key not configured', code: 'MISSING_PRIVATE_KEY' });
     }
 
-    console.log('[FAUCET] Creating provider for', network.rpcUrl);
-
     // Создаем провайдер и faucet кошелёк
-    const provider = new ethers.JsonRpcProvider(network.rpcUrl);
-    const ownerWallet = new ethers.Wallet(ownerPrivateKey, provider);
+    const faucetOwnerWalletClient = createWalletClient({
+      account:privateKeyToAccount(ownerPrivateKey),
+      chain:network,
+      transport:http()
+    }).extend(publicActions)
+    // const faucetOwnerAccount = privateKeyToAccount(ownerPrivateKey)
 
-    console.log('[FAUCET] Faucet wallet address:', ownerWallet.address);
+    console.log('[FAUCET] Faucet wallet address:', faucetOwnerWalletClient.account.address);
 
     // Проверяем баланс фонда
-    const dripAmount = ethers.parseEther('0.0001'); // Изменено на 0.0001 ETH
-    const faucetBalance = await provider.getBalance(ownerWallet.address); // Проверяем баланс отдельного faucet кошелька
+    const dripAmount = parseEther('0.0001');
+    let faucetBalance;
+    try {
+      faucetBalance = await faucetOwnerWalletClient.getBalance({address: faucetOwnerWalletClient.account.address});
+      console.log("faucet (owner) balance is here: ", faucetBalance);
+    } catch (error) {
+      console.error('[FAUCET] Failed to check faucet balance:', error.message);
+      return res.status(500).json({
+        error: 'Failed to connect to RPC',
+        details: error.message,
+        code: 'RPC_ERROR'
+      });
+    }
     
     // ВРЕМЕННО ОТКЛЮЧЕНО: Проверка баланса faucet
-    // if (faucetBalance < dripAmount) {
-    //   return res.status(400).json({ 
-    //     error: 'Faucet wallet is empty',
-    //     balance: ethers.formatEther(faucetBalance),
-    //     code: 'INSUFFICIENT_FAUCET_FUNDS'
-    //   });
-    // }
+    if (faucetBalance < dripAmount) {
+      return res.status(400).json({ 
+        error: 'Faucet wallet is empty',
+        balance: formatEther(faucetBalance),
+        code: 'INSUFFICIENT_FAUCET_FUNDS'
+      });
+    }
     
     // Логируем текущий баланс faucet для мониторинга
-    console.log(`Faucet balance: ${ethers.formatEther(faucetBalance)} ETH`);
+    console.log(`Faucet balance: ${formatEther(faucetBalance)} ETH`);
 
     // Проверяем, что у пользователя мало средств (< 0.00005 ETH)
     console.log('[FAUCET] Checking user balance for', address);
-    const userBalance = await provider.getBalance(address);
-    const minBalance = ethers.parseEther('0.00005'); // Изменено на 0.00005 ETH
+    let userBalance;
+    try {
+      userBalance = await faucetOwnerWalletClient.getBalance({address});
+    } catch (error) {
+      console.error('[FAUCET] Failed to check user balance:', error.message);
+      return res.status(500).json({
+        error: 'Failed to check user balance',
+        details: error.message,
+        code: 'RPC_ERROR'
+      });
+    }
+    const minBalance = parseEther('0.00005'); 
 
-    console.log('[FAUCET] User balance:', ethers.formatEther(userBalance), 'ETH');
+    console.log('[FAUCET] User balance:', formatEther(userBalance), 'ETH');
 
     if (!force && userBalance >= minBalance) {
       console.log('[FAUCET] User already has sufficient balance');
       return res.status(400).json({
         error: 'Address already has sufficient balance',
-        balance: ethers.formatEther(userBalance),
+        balance: formatEther(userBalance),
         minimum: '0.00005',
         code: 'ALREADY_SUFFICIENT'
       });
@@ -121,26 +129,45 @@ export default async function handler(req, res) {
     // Отправляем ETH напрямую из faucet кошелька
     console.log(`[FAUCET] Sending 0.0001 ETH from faucet wallet to ${address} on chain ${chainId}`);
 
-    const tx = await ownerWallet.sendTransaction({
-      to: address,
-      value: dripAmount,
-      gasLimit: 21000n // Стандартный газ для простого перевода ETH
-    });
+    let tx;
+    try {
+      tx = await faucetOwnerWalletClient.sendTransaction({
+        to: address,
+        value: dripAmount,
+      });
+      console.log('[FAUCET] Transaction sent, hash:', tx);
+    } catch (error) {
+      console.error('[FAUCET] Failed to send transaction:', error.message);
+      return res.status(500).json({
+        error: 'Failed to send transaction',
+        details: error.message,
+        code: 'TRANSACTION_SEND_ERROR'
+      });
+    }
 
-    console.log('[FAUCET] Transaction sent, hash:', tx.hash);
     console.log('[FAUCET] Waiting for confirmation...');
 
-    // Ждём подтверждения транзакции
-    const receipt = await tx.wait();
+    let receipt;
+    try {
+      receipt = await faucetOwnerWalletClient.waitForTransactionReceipt({ hash: tx });
+    } catch (error) {
+      console.error('[FAUCET] Transaction confirmation failed:', error.message);
+      return res.status(500).json({
+        error: 'Transaction sent but confirmation failed',
+        txHash: tx,
+        details: error.message,
+        code: 'CONFIRMATION_TIMEOUT'
+      });
+    }
+
 
     console.log(`[FAUCET] Transaction confirmed in block ${receipt.blockNumber}`);
-    console.log(`[FAUCET] Transaction successful: ${receipt.hash}`);
+    console.log(`[FAUCET] Transaction successful: ${receipt.transactionHash}`);
 
     return res.status(200).json({
       success: true,
-      // Совместимость с клиентом: дублируем поле txHash
-      txHash: receipt.hash,
-      transactionHash: receipt.hash,
+      txHash: receipt.transactionHash,
+      transactionHash: receipt.transactionHash,
       amount: '0.0001',
       recipient: address,
       blockNumber: receipt.blockNumber
