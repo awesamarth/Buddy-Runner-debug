@@ -170,7 +170,7 @@ export default async function handler(req, res) {
       transactionHash: receipt.transactionHash,
       amount: '0.0001',
       recipient: address,
-      blockNumber: receipt.blockNumber
+      blockNumber: Number(receipt.blockNumber)
     });
 
   } catch (error) {
