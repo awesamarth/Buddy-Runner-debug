@@ -116,15 +116,16 @@ export default async function handler(req, res) {
 
     console.log('[FAUCET] User balance:', formatEther(userBalance), 'ETH');
 
-    if (!force && userBalance >= minBalance) {
-      console.log('[FAUCET] User already has sufficient balance');
-      return res.status(400).json({
-        error: 'Address already has sufficient balance',
-        balance: formatEther(userBalance),
-        minimum: '0.00005',
-        code: 'ALREADY_SUFFICIENT'
-      });
-    }
+    //disabling for testing
+    // if (!force && userBalance >= minBalance) {
+    //   console.log('[FAUCET] User already has sufficient balance');
+    //   return res.status(400).json({
+    //     error: 'Address already has sufficient balance',
+    //     balance: formatEther(userBalance),
+    //     minimum: '0.00005',
+    //     code: 'ALREADY_SUFFICIENT'
+    //   });
+    // }
 
     // Отправляем ETH напрямую из faucet кошелька
     console.log(`[FAUCET] Sending 0.0001 ETH from faucet wallet to ${address} on chain ${chainId}`);
