@@ -32,8 +32,8 @@ const GameComponent = ({ selectedNetwork }) => {
   } = blockchainUtils;
 
   // Add missing variables for UI components
-  const transactionPending = false;
-  const transactionPendingCount = 0;
+  const [transactionPendingCount, setTransactionPendingCount] = useState(0);
+  const transactionPending = transactionPendingCount > 0;
   const [balance, setBalance] = useState('0');
   const [isInitializing, setIsInitializing] = useState(false);
 
@@ -58,7 +58,7 @@ const GameComponent = ({ selectedNetwork }) => {
       blockchainInitialized: blockchainStatus.initialized
     };
     blockchainStatusRef.current = blockchainStatus;
-  }, [sendUpdate, selectedNetwork, blockchainStatus]);
+  }, [selectedNetwork, blockchainStatus]);
 
   // Game constants with pixel art scaling
   const GAME_SPEED_START = 1;
@@ -140,6 +140,8 @@ const GameComponent = ({ selectedNetwork }) => {
     }
 
     try {
+      // Increment pending count
+      setTransactionPendingCount(prev => prev + 1);
       setShowToast(true);
 
       // Send transaction to makeMovement function
@@ -173,6 +175,8 @@ const GameComponent = ({ selectedNetwork }) => {
         }
       }));
     } finally {
+      // Decrement pending count
+      setTransactionPendingCount(prev => Math.max(0, prev - 1));
       setShowToast(false);
     }
   }, []); // Empty dependency array - function is stable now
@@ -190,15 +194,14 @@ const GameComponent = ({ selectedNetwork }) => {
       const result = await callFaucet(wallets[0].address, selectedNetwork.id);
 
 
-      // Wait for transaction to be confirmed
+      // Transaction is already confirmed by the API (tx.wait())
       if (result.txHash || result.transactionHash) {
+        // Refresh balance immediately
+        const newBalanceWei = await checkBalance(selectedNetwork.id);
+        const newBalanceEth = formatEther(newBalanceWei);
+        setBalance(newBalanceEth);
 
-        // Wait a moment and then refresh balance
-        setTimeout(async () => {
-          await checkBalance(selectedNetwork.id);
-        }, 1000);
-
-        alert('Faucet request successful! Balance should update shortly.');
+        alert('Faucet request successful! Balance updated.');
       } else {
         alert('Faucet request completed.');
       }
@@ -352,7 +355,7 @@ const GameComponent = ({ selectedNetwork }) => {
         GROUND_AND_CARROT_SPEED
       );
 
-      game.score = new Score(ctx, game.scaleRatio);
+      game.score = new Score(ctx, game.scaleRatio, blockchainStatus, selectedNetwork?.id);
     }
 
     function setScreen() {
@@ -465,13 +468,18 @@ const GameComponent = ({ selectedNetwork }) => {
           canvas.width / 2,
           canvas.height / 2 + fontSize + statusFontSize + 25
         );
-        
+
+        // console.log("selected network is here: ", selectedNetwork)
+
+        if (selectedNetwork.id!="web2"){
           ctx.fillStyle = "#28a745";
           ctx.fillText(
             "> BLOCKCHAIN CONNECTION: ACTIVE",
             canvas.width / 2,
             canvas.height / 2 + fontSize + statusFontSize * 2 + 30
           );
+          
+        }
         
       } else {
         ctx.fillStyle = "#ef5435";
@@ -590,6 +598,7 @@ const GameComponent = ({ selectedNetwork }) => {
         // Check collision
         if (checkCollision()) {
           game.gameOver = true;
+          game.score.setHighScore();
           setupGameReset();
         }
 
@@ -601,7 +610,7 @@ const GameComponent = ({ selectedNetwork }) => {
       game.ground.draw();
       game.carrotController.draw();
       game.player.draw();
-      game.score.draw();
+      game.score.draw(blockchainStatusRef.current);
 
       if (game.gameOver) {
         showGameOverWithWallet();
@@ -655,7 +664,7 @@ const GameComponent = ({ selectedNetwork }) => {
       document.removeEventListener("keyup", initialKeyHandler);
       document.removeEventListener("touchstart", initialKeyHandler);
     };
-  }, [selectedNetwork, handleOnChainMovement]);
+  }, [selectedNetwork]);
 
   return (
     <div className="game-container">

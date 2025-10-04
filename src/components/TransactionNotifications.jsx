@@ -13,35 +13,6 @@ const TransactionNotifications = ({
   const [lastProcessedTransactionTime, setLastProcessedTransactionTime] = useState(0);
   const [lastPendingCount, setLastPendingCount] = useState(0);
 
-  // Добавляем уведомление о транзакции (отслеживаем изменения totalMovements)
-  useEffect(() => {
-    if (authenticated && selectedNetwork && !selectedNetwork.isWeb2 && blockchainStatus) {
-      // Отслеживаем увеличение totalMovements как индикатор новой транзакции
-      const currentMovements = blockchainStatus.totalMovements || 0;
-      
-      // Если totalMovements увеличился, значит была новая транзакция
-      if (currentMovements > 0) {
-        // Проверяем, есть ли новая транзакция по времени
-        const currentTransactionTime = blockchainStatus.lastTransactionTime || 0;
-        
-        if (currentTransactionTime > lastProcessedTransactionTime && currentTransactionTime > 0) {
-          const notification = {
-            id: Date.now() + Math.random(),
-            type: 'transaction',
-            title: 'Jump Completed',
-            message: `Jump completed in ${currentTransactionTime}ms on ${selectedNetwork.name}`,
-            status: 'completed',
-            timestamp: Date.now(),
-            completedAt: Date.now()
-          };
-          
-          setNotifications(prev => [...prev, notification]);
-          setLastProcessedTransactionTime(currentTransactionTime);
-        }
-      }
-    }
-  }, [blockchainStatus?.totalMovements, blockchainStatus?.lastTransactionTime, authenticated, selectedNetwork, lastProcessedTransactionTime]);
-
   // Добавляем уведомление о pending транзакции (отслеживаем увеличение transactionPendingCount)
   useEffect(() => {
     if (authenticated && selectedNetwork && !selectedNetwork.isWeb2) {
